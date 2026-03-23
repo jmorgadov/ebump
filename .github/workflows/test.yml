@@ -1,23 +1,27 @@
-name: Upload Python Package
+name: Run tests
 
 on:
   workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+      - develop
 
 jobs:
-  deploy:
+  test:
 
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v4
 
+    - name: Install uv
+      uses: astral-sh/setup-uv@v5
+
     - name: "Set up Python"
       uses: actions/setup-python@v5
       with:
         python-version-file: ".python-version"
-
-    - name: Install uv
-      uses: astral-sh/setup-uv@v5
 
     - name: Lock file
       run: uv lock
@@ -25,11 +29,5 @@ jobs:
     - name: Install the project
       run: uv sync --locked --all-extras --dev
 
-    - name: Test
+    - name: Run tests
       run: make test
-
-    - name: Build
-      run: uv build
-
-    - name: Publish
-      run: uv publish -t ${{ secrets.PYPI_RELEASE_TOKEN }}
