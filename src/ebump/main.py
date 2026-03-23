@@ -6,87 +6,45 @@ import argparse
 import logging
 import os
 import sys
-from pathlib import Path
 
-import bumpver
-import bumpver.config
-import click
-import click.testing
-from bumpver import v1version, v2version
-from bumpver.cli import cli
+from ebump.bump import bump
+from ebump.config import Config, parse_config
+from ebump.rewrite import perform_rewrites, rewrite_files
+from ebump.utils import project_root
+from ebump.version import PartType, TagType, Version
 
 logger = logging.getLogger(__name__)
 
-
-ROOT_IDENTIFIERS = ["pyproject.toml", ".git"]
 
 MAIN_PARTS = {"patch", "minor", "major"}
 PART_OPTS = MAIN_PARTS.union({"tag"})
 TAG_OPTS = {"alpha", "beta", "dev", "rc", "post", "final"}
 
 
-def project_root() -> Path:
-    """
-    Get the project root directory
-    """
-
-    current_dir = Path.cwd()
-    while current_dir != current_dir.parent:
-        if any((current_dir / identifier).exists() for identifier in ROOT_IDENTIFIERS):
-            return current_dir
-        current_dir = current_dir.parent
-    return Path.cwd()
+def _show_diff(old_lines: list[str], new_lines: list[str]) -> None:
+    for old_line, new_line in zip(old_lines, new_lines, strict=False):
+        if old_line != new_line:
+            sys.stdout.write(f"- {old_line}\n")
+            sys.stdout.write(f"+ {new_line}\n")
 
 
-def run(
-    cfg: bumpver.config.Config,
-    action: str | None,
-    tag: str | None,
-    dry: bool = False,
-) -> None:
-    """
-    Write the new version to your version file/config
-    """
-    raw_pattern = cfg.version_pattern
+def set_version(cfg: Config, new_version: Version, dry_run: bool) -> None:
+    rewrite_data_list = rewrite_files(cfg, str(new_version))
     current_version = cfg.current_version
-    vinfo_func = (
-        v2version.parse_version_info
-        if cfg.is_new_pattern
-        else v1version.parse_version_info
-    )
-    vinfo = vinfo_func(current_version, raw_pattern)
 
-    cmd = ["update"]
-    if action in MAIN_PARTS:
-        cmd += ["--" + action, "--tag", tag or "final"]
-    elif action == "tag":
-        if not vinfo.tag or vinfo.tag == "final":
-            sys.stderr.write("No tag found to bump.\n")
-            sys.exit(1)
-        cmd += ["--tag-num", "-n"]
-    elif action in TAG_OPTS:
-        if action == "final" and (not vinfo.tag or vinfo.tag == "final"):
-            sys.stdout.write("Already at final version. All good.\n")
-            return
-        if action == vinfo.tag:
-            cmd += ["--tag-num", "-n"]
-        else:
-            cmd += ["--tag", action]
-
-    if dry:
-        cmd.append("--dry")
-    runner = click.testing.CliRunner(catch_exceptions=False)
-    result = runner.invoke(cli, cmd, color=True, catch_exceptions=False)
-
-    sys.stdout.write(result.output)
-    if result.exit_code != 0:
-        sys.exit(1)
+    if dry_run:
+        sys.stdout.write("Dry run - no files will be modified. Showing diffs:\n")
+        for rewrite_data in rewrite_data_list:
+            sys.stdout.write(f"\n{rewrite_data.path.relative_to(cfg.root)}:\n")
+            _show_diff(rewrite_data.old_lines, rewrite_data.new_lines)
+    elif new_version != current_version:
+        perform_rewrites(rewrite_data_list)
+        sys.stdout.write(f"Version set: {new_version}\n")
+    else:
+        sys.stdout.write(f"Version is already at {current_version}, no changes made.\n")
 
 
-def main() -> None:
-    """
-    Main entry point for the ebump CLI tool
-    """
+def cli() -> None:
     parser = argparse.ArgumentParser(
         prog="ebump",
         description="Easy version bumping tool",
@@ -133,48 +91,78 @@ Bad examples:
         help="Perform a dry run without modifying any files",
     )
 
+    parser.add_argument(
+        "--set",
+        default=None,
+        help="Set the version to a specific value instead of bumping. This overrides the 'bump' argument.",
+    )
+
+    parser.add_argument(
+        "--force",
+        default=False,
+        action="store_true",
+        help="Force the version set (when used with --set) even if the new version is not greater than the current version. Use with caution.",
+    )
+
     args = parser.parse_args()
-    bump = args.bump
+    bump_args = args.bump
     dry_run = args.dry_run
 
-    os.chdir(project_root())
+    root = project_root()
+    os.chdir(root)
 
-    _, cfg = bumpver.config.init(project_path=".")
-    if cfg is None:
-        logger.error(
-            "No valid configuration found. Please ensure you have a supported version file and configuration."
-        )
-        exit(1)
+    cfg = parse_config(root)
+    current_version = cfg.current_version
 
-    if not bump:
-        current_version = cfg.current_version
+    if args.set is not None:
+        new_version = Version.parse(args.set)
+        if not args.force and new_version <= current_version:
+            raise ValueError(
+                f"New version {new_version} must be greater than current "
+                f"version {current_version}. Use --force to override this check."
+            )
+        set_version(cfg, new_version, dry_run)
+        sys.exit(0)
+
+    if not bump_args:
         sys.stdout.write(f"{current_version}\n")
         sys.exit(0)
 
-    if len(bump) > 2:
-        logger.error("You can only specify one part to bump and/or one tag.")
-        sys.exit(1)
+    if len(bump_args) > 2:
+        raise ValueError(
+            "Too many arguments provided. You can only specify one part to bump"
+            " and/or one tag"
+        )
 
-    cmd_bump_set = set(bump)
-    part_to_bump: set[str] = cmd_bump_set.intersection(PART_OPTS)
+    part_opts = set(map(str.lower, PartType.__members__))
+    tag_opts = set(map(str.lower, TagType.__members__))
+
+    cmd_bump_set = set(bump_args)
+
+    part_to_bump: set[str] = cmd_bump_set.intersection(part_opts)
     if len(part_to_bump) > 1:
-        logger.error("You can only specify one part to bump %s.", str(PART_OPTS))
-        sys.exit(1)
+        raise ValueError("You can only specify one part to bump")
 
-    tag_to_bump: set[str] = cmd_bump_set.intersection(TAG_OPTS)
+    tag_to_bump: set[str] = cmd_bump_set.intersection(tag_opts)
     if len(tag_to_bump) > 1:
-        logger.error("You can only specify one tag to bump %s.", str(TAG_OPTS))
+        raise ValueError("You can only specify one tag to bump")
+
+    part_str = part_to_bump.pop() if part_to_bump else "tag"
+    tag_str = tag_to_bump.pop() if tag_to_bump else None
+
+    part = PartType(part_str)
+    tag = TagType(tag_str) if tag_str else None
+
+    new_version = bump(current_version, part, tag)
+    set_version(cfg, new_version, dry_run)
+
+
+def main() -> None:
+    try:
+        cli()
+    except Exception as e:
+        logger.error(str(e))
         sys.exit(1)
-
-    action = part_to_bump.pop() if part_to_bump else tag_to_bump.pop()
-    tag = tag_to_bump.pop() if tag_to_bump else None
-
-    # `ebump tag [TAG]` has the same behavior as `ebump [TAG]`
-    if action == "tag" and tag is not None:
-        action = tag
-        tag = None
-
-    run(cfg, action, tag, dry_run)
 
 
 if __name__ == "__main__":

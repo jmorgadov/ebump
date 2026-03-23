@@ -1,90 +1,8 @@
 """
 Tests for ebump CLI.
-
-The core challenge: ebump calls `os.chdir(project_root())` and reads a real
-pyproject.toml on disk. So every test gets a fresh temporary directory that
-looks like a real Python project with bumpver configured.
 """
 
-import subprocess
-import sys
-import textwrap
-from pathlib import Path
-
-import pytest
-
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
-
-
-def make_pyproject(version: str, tmp_path: Path) -> None:
-    """Write a minimal pyproject.toml with bumpver configured."""
-    content = textwrap.dedent(f"""\
-        [project]
-        name = "mypackage"
-        version = "{version}"
- 
-        [tool.bumpver]
-        current_version = "{version}"
-        version_pattern = "MAJOR.MINOR.PATCH[-TAGNUM]"
- 
-        [tool.bumpver.file_patterns]
-        "pyproject.toml" = [
-            '^version = "{{version}}"',
-            '^current_version = "{{version}}"',
-        ]
-    """)
-    (tmp_path / "pyproject.toml").write_text(content)
-
-
-def read_version(tmp_path: Path) -> str:
-    """Read the current_version field from pyproject.toml."""
-    for line in (tmp_path / "pyproject.toml").read_text().splitlines():
-        if line.startswith("version = "):
-            return line.split('"')[1]
-    raise ValueError("current_version not found")
-
-
-def run_ebump(args: list[str], cwd: Path) -> subprocess.CompletedProcess:
-    """Run ebump as a subprocess so os.chdir() side effects are isolated."""
-    project_root = Path(__file__).parent.parent
-    data_file = str((project_root / ".coverage").absolute())
-    return subprocess.run(  # noqa: S603
-        [
-            sys.executable,
-            "-m",
-            "coverage",
-            "run",
-            "--parallel-mode",
-            f"--data-file={data_file}",
-            "-m",
-            "ebump.main",
-            *args,
-        ],
-        capture_output=True,
-        text=True,
-        cwd=str(cwd),
-    )
-
-
-# ---------------------------------------------------------------------------
-# Fixture
-# ---------------------------------------------------------------------------
-
-
-@pytest.fixture()
-def project(tmp_path_factory: pytest.TempPathFactory):
-    """
-    A temporary directory that mimics a real Python project.
-    Starts at version 1.0.0 by default.
-    Returns the path; tests can call make_pyproject() again to change version.
-    """
-
-    tmp_path = tmp_path_factory.mktemp("mock-python-project")
-    make_pyproject("1.0.0", tmp_path)
-    return tmp_path
-
+from conftest import make_pyproject, read_version, run_ebump
 
 # ---------------------------------------------------------------------------
 # Showing the current version
@@ -165,7 +83,7 @@ class TestBumpTag:
         assert read_version(project) == "1.0.0"
         result = run_ebump(["tag"], project)
         assert result.returncode != 0
-        assert "No tag found to bump" in result.stderr
+        assert "Cannot bump tag number on a final version" in result.stderr
 
     def test_tag_beta_when_at_alpha_promotes_to_beta(self, project):
         make_pyproject("1.0.0-alpha3", project)
@@ -198,7 +116,7 @@ class TestTagShorthand:
         result = run_ebump(["final"], project)
         assert result.returncode == 0
         assert read_version(project) == "1.0.0"
-        assert "Already at final" in result.stdout
+        assert "Version is already at" in result.stdout
 
 
 # ---------------------------------------------------------------------------
@@ -207,6 +125,12 @@ class TestTagShorthand:
 
 
 class TestErrorCases:
+    def test_bump_to_tag_on_final_is_error(self, project):
+        make_pyproject("1.0.0", project)
+        result = run_ebump(["beta"], project)
+        assert result.returncode != 0
+        assert "Cannot bump to tag beta on a final version" in result.stderr
+
     def test_two_parts_is_an_error(self, project):
         result = run_ebump(["patch", "minor"], project)
         assert result.returncode != 0
@@ -228,3 +152,61 @@ class TestErrorCases:
         make_pyproject("1.0.0-beta2", project)
         result = run_ebump(["alpha"], project)
         assert result.returncode != 0
+
+
+class TestRewritePatterns:
+    def test_pattern_rewrite_same_line_endings(self, project):
+        make_pyproject(
+            "1.0.0",
+            project,
+            custom_pyproject_content='[project]\r\nname = "test_project"\r\nversion = "1.0.0"\r\n',
+        )
+        run_ebump(["patch"], project)
+        assert (project / "pyproject.toml").read_text(
+            newline=""
+        ) == '[project]\r\nname = "test_project"\r\nversion = "1.0.1"\r\n'
+
+        make_pyproject(
+            "1.0.0",
+            project,
+            custom_pyproject_content='[project]\rname = "test_project"\rversion = "1.0.0"\r',
+        )
+        run_ebump(["patch"], project)
+        assert (project / "pyproject.toml").read_text(
+            newline=""
+        ) == '[project]\rname = "test_project"\rversion = "1.0.1"\r'
+
+
+class TestVersionSet:
+    def test_version_set(self, project):
+        make_pyproject("1.0.0", project)
+        result = run_ebump(["--set", "1.0.1-alpha1"], project)
+        assert result.returncode == 0
+        assert read_version(project) == "1.0.1-alpha1"
+
+    def test_version_set_dry_run(self, project):
+        make_pyproject("1.0.0", project)
+        result = run_ebump(["--set", "1.0.1-alpha1", "--dry-run"], project)
+        assert result.returncode == 0
+        assert read_version(project) == "1.0.0"
+
+    def test_version_set_invalid_version(self, project):
+        make_pyproject("1.0.0", project)
+        result = run_ebump(["--set", "not_a_version"], project)
+        assert result.returncode != 0
+        assert "Invalid version string: not_a_version" in result.stderr
+
+    def test_version_set_forcedly_overwrite(self, project):
+        make_pyproject("3.0.0", project)
+        result = run_ebump(["--set", "2.0.0", "--force"], project)
+        assert result.returncode == 0
+        assert read_version(project) == "2.0.0"
+
+    def test_versino_set_invalid_no_force(self, project):
+        make_pyproject("3.0.0", project)
+        result = run_ebump(["--set", "2.0.0"], project)
+        assert result.returncode != 0
+        assert (
+            "New version 2.0.0 must be greater than current version 3.0.0"
+            in result.stderr
+        )

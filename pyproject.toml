@@ -1,17 +1,16 @@
 [project]
 name = "ebump"
-version = "0.1.2"
+version = "0.2.0"
 description = "Easy version bumping"
 readme = "README.md"
 requires-python = ">= 3.13"
 authors = [{ name = "Jorge Morgado Vega", email = "jorge.morgadov@gmail.com" }]
 license = { text = "MIT" }
 
-dependencies = ["bumpver>=2025.1131", "click>=8.3.1"]
+dependencies = []
 
 [dependency-groups]
 dev = [
-    "bumpver",
     "mypy",
 
     "pytest",
@@ -80,7 +79,7 @@ unfixable = []
 
 [tool.mypy]
 python_version = "3.13"
-files = ["src"]
+files = ["src", "tests"]
 warn_unused_configs = true
 warn_redundant_casts = true
 warn_unused_ignores = true
@@ -104,10 +103,5 @@ pythonpath = "./src"
 env_override_existing_values = 1
 env_files = [".env.test"]
 
-[tool.bumpver]
-current_version = "0.1.2"
-version_pattern = "MAJOR.MINOR.PATCH[-TAGNUM]"
-
-[tool.bumpver.file_patterns]
-"pyproject.toml" = ['^version = "{version}"', '^current_version = "{version}"']
+[tool.ebump.patterns]
 "src/ebump/__init__.py" = ['^__version__ = "{version}"$']
