@@ -1,8 +1,7 @@
 import re
+import tomllib
 from dataclasses import dataclass
 from pathlib import Path
-
-import toml
 
 from ebump.version import VERSION_RE, TagType, Version
 
@@ -33,7 +32,7 @@ def parse_config(root: Path) -> Config:
             f"No pyproject.toml found in project root {root.absolute()!s}"
         )
 
-    pyproject_dict = toml.loads(pyproject_content)
+    pyproject_dict = tomllib.loads(pyproject_content)
 
     current_version_str = pyproject_dict.get("project", {}).get("version", None)
     if not current_version_str:
