@@ -10,10 +10,9 @@ from pathlib import Path
 
 import bumpver
 import bumpver.config
-import bumpver.v1version
-import bumpver.v2version
 import click
 import click.testing
+from bumpver import v1version, v2version
 from bumpver.cli import cli
 
 logger = logging.getLogger(__name__)
@@ -51,9 +50,9 @@ def run(
     raw_pattern = cfg.version_pattern
     current_version = cfg.current_version
     vinfo_func = (
-        bumpver.v2version.parse_version_info
+        v2version.parse_version_info
         if cfg.is_new_pattern
-        else bumpver.v1version.parse_version_info
+        else v1version.parse_version_info
     )
     vinfo = vinfo_func(current_version, raw_pattern)
 
@@ -61,7 +60,7 @@ def run(
     if action in MAIN_PARTS:
         cmd += ["--" + action, "--tag", tag or "final"]
     elif action == "tag":
-        if not vinfo.tag:
+        if not vinfo.tag or vinfo.tag == "final":
             sys.stderr.write("No tag found to bump.\n")
             sys.exit(1)
         cmd += ["--tag-num", "-n"]
@@ -135,6 +134,8 @@ Bad examples:
     )
 
     args = parser.parse_args()
+    bump = args.bump
+    dry_run = args.dry_run
 
     os.chdir(project_root())
 
@@ -145,16 +146,16 @@ Bad examples:
         )
         exit(1)
 
-    if not args.bump:
+    if not bump:
         current_version = cfg.current_version
         sys.stdout.write(f"{current_version}\n")
         sys.exit(0)
 
-    if len(args.bump) > 2:
+    if len(bump) > 2:
         logger.error("You can only specify one part to bump and/or one tag.")
         sys.exit(1)
 
-    cmd_bump_set = set(args.bump)
+    cmd_bump_set = set(bump)
     part_to_bump: set[str] = cmd_bump_set.intersection(PART_OPTS)
     if len(part_to_bump) > 1:
         logger.error("You can only specify one part to bump %s.", str(PART_OPTS))
@@ -173,7 +174,7 @@ Bad examples:
         action = tag
         tag = None
 
-    run(cfg, action, tag, args.dry_run)
+    run(cfg, action, tag, dry_run)
 
 
 if __name__ == "__main__":

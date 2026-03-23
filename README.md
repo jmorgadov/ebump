@@ -74,6 +74,7 @@ Design differences with `bumpver` CLI:
     You can still set a pre-release tag in the same command (e.g., `ebump minor beta` to get `1.1.0-beta0`).
 
 - Simplified CLI with fewer options, focusing on the most common use cases.
+- Can be executed in any directory of the project, root is automatically detected.
 
 ## What `ebump` is NOT
 
