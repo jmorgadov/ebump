@@ -1,5 +1,8 @@
 # ebump
 
+[![PyPI](https://img.shields.io/pypi/v/ebump.svg)](https://pypi.org/project/ebump/)
+![Tests](https://github.com/jmorgadov/ebump/actions/workflows/test.yml/badge.svg)
+
 Easy version bumping CLI tool for python projects.
 
 ## Key features
