@@ -24,8 +24,8 @@ TAG_OPTS = {"alpha", "beta", "dev", "rc", "post", "final"}
 def _show_diff(old_lines: list[str], new_lines: list[str]) -> None:
     for old_line, new_line in zip(old_lines, new_lines, strict=False):
         if old_line != new_line:
-            sys.stdout.write(f"- {old_line}\n")
-            sys.stdout.write(f"+ {new_line}\n")
+            sys.stdout.write(f"- {old_line}")
+            sys.stdout.write(f"+ {new_line}")
 
 
 def set_version(cfg: Config, new_version: Version, dry_run: bool) -> None:
