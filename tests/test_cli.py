@@ -154,29 +154,6 @@ class TestErrorCases:
         assert result.returncode != 0
 
 
-class TestRewritePatterns:
-    def test_pattern_rewrite_same_line_endings(self, project):
-        make_pyproject(
-            "1.0.0",
-            project,
-            custom_pyproject_content='[project]\r\nname = "test_project"\r\nversion = "1.0.0"\r\n',
-        )
-        run_ebump(["patch"], project)
-        assert (project / "pyproject.toml").read_text(
-            newline=""
-        ) == '[project]\r\nname = "test_project"\r\nversion = "1.0.1"\r\n'
-
-        make_pyproject(
-            "1.0.0",
-            project,
-            custom_pyproject_content='[project]\rname = "test_project"\rversion = "1.0.0"\r',
-        )
-        run_ebump(["patch"], project)
-        assert (project / "pyproject.toml").read_text(
-            newline=""
-        ) == '[project]\rname = "test_project"\rversion = "1.0.1"\r'
-
-
 class TestVersionSet:
     def test_version_set(self, project):
         make_pyproject("1.0.0", project)

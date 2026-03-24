@@ -11,7 +11,6 @@ RewriteData = NamedTuple(
         ("path", Path),
         ("old_lines", list[str]),
         ("new_lines", list[str]),
-        ("line_sep", str),
     ],
 )
 
@@ -22,9 +21,11 @@ def rewrite_lines(
     used_patterns = set()
     new_lines = old_lines[:]
     for i, line in enumerate(old_lines):
+        stripped = line.rstrip("\r\n")
+        ending = line[len(stripped) :]
         new_line = line
         for patt_idx, pattern in enumerate(patterns):
-            match = pattern.match(line)
+            match = pattern.match(stripped)
             if match is None:
                 continue
 
@@ -38,13 +39,14 @@ def rewrite_lines(
                 start_idx = match.start(group_idx)
                 end_idx = match.end(group_idx)
                 if last_idx < start_idx:
-                    new_line += line[last_idx:start_idx]
+                    new_line += stripped[last_idx:start_idx]
 
                 new_line += new_version
                 last_idx = end_idx
 
-            if last_idx < len(line):
-                new_line += line[last_idx:]
+            if last_idx < len(stripped):
+                new_line += stripped[last_idx:]
+            new_line += ending
             break
 
         new_lines[i] = new_line
@@ -60,25 +62,13 @@ def rewrite_lines(
     return new_lines
 
 
-def detect_line_sep(content: str) -> str:
-    """Parse line separator from content."""
-    if "\r\n" in content:
-        return "\r\n"
-    if "\r" in content:
-        return "\r"
-    return "\n"
-
-
 def rewrite_file(
     path: Path, new_version: str, patterns: list[re.Pattern]
 ) -> RewriteData:
     content = path.read_text(newline="")
-    line_sep = detect_line_sep(content)
-    old_lines = content.split(line_sep)
+    old_lines = content.splitlines(keepends=True)
     new_lines = rewrite_lines(old_lines, new_version, patterns)
-    return RewriteData(
-        path=path, old_lines=old_lines, new_lines=new_lines, line_sep=line_sep
-    )
+    return RewriteData(path=path, old_lines=old_lines, new_lines=new_lines)
 
 
 def rewrite_files(config: Config, new_version: str) -> list[RewriteData]:
@@ -90,5 +80,5 @@ def rewrite_files(config: Config, new_version: str) -> list[RewriteData]:
 
 def perform_rewrites(rewrite_data_list: list[RewriteData]) -> None:
     for rewrite_data in rewrite_data_list:
-        new_content = rewrite_data.line_sep.join(rewrite_data.new_lines)
-        rewrite_data.path.write_text(new_content)
+        new_content = "".join(rewrite_data.new_lines)
+        rewrite_data.path.write_text(new_content, newline="")

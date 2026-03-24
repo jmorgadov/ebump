@@ -22,9 +22,7 @@ class TagType(enum.Enum):
 
 TAGS_ORDER = {tag: i for i, tag in enumerate(TagType)}
 
-
 VERSION_RE = re.compile(r"(\d+\.\d+\.\d+(?:-(alpha|beta|dev|rc|post)\d*)?)")
-
 VERSION_GROUPS_RE = re.compile(
     r"(?P<major>\d+)"
     r"\."
