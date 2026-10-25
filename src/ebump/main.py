@@ -76,11 +76,14 @@ Bad examples:
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
+    bump_opts = list(PART_OPTS) + list(TAG_OPTS)
+    # Checked after parsing: before Python 3.12, argparse rejects an empty
+    # nargs="*" positional when it declares choices.
     parser.add_argument(
         "bump",
         nargs="*",
         default=None,
-        choices=list(PART_OPTS) + list(TAG_OPTS),
+        metavar="{" + ",".join(bump_opts) + "}",
         help=f"Version part to bump {PART_OPTS}, and/or specific pre-release tag {TAG_OPTS}",
     )
 
@@ -105,6 +108,12 @@ Bad examples:
     )
 
     args = parser.parse_args()
+    invalid_opts = [opt for opt in args.bump if opt not in bump_opts]
+    if invalid_opts:
+        parser.error(
+            f"argument bump: invalid choice: {invalid_opts[0]!r} "
+            f"(choose from {', '.join(map(repr, bump_opts))})"
+        )
     bump_args = args.bump
     dry_run = args.dry_run
 
