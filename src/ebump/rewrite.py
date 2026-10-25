@@ -65,7 +65,8 @@ def rewrite_lines(
 def rewrite_file(
     path: Path, new_version: str, patterns: list[re.Pattern]
 ) -> RewriteData:
-    content = path.read_text(newline="")
+    with path.open(newline="") as file:
+        content = file.read()
     old_lines = content.splitlines(keepends=True)
     new_lines = rewrite_lines(old_lines, new_version, patterns)
     return RewriteData(path=path, old_lines=old_lines, new_lines=new_lines)

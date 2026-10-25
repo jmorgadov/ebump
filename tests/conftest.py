@@ -43,6 +43,12 @@ def read_version(tmp_path: Path) -> str:
     raise ValueError("current_version not found")
 
 
+def read_raw_text(path: Path) -> str:
+    """Read a file keeping its original line endings."""
+    with path.open(newline="") as file:
+        return file.read()
+
+
 def run_ebump(args: list[str], cwd: Path) -> subprocess.CompletedProcess:
     """Run ebump as a subprocess so os.chdir() side effects are isolated."""
     project_root = Path(__file__).parent.parent

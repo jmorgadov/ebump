@@ -3,7 +3,7 @@ name = "ebump"
 version = "0.2.1"
 description = "Easy version bumping"
 readme = "README.md"
-requires-python = ">= 3.13"
+requires-python = ">= 3.11"
 authors = [{ name = "Jorge Morgado Vega", email = "jorge.morgadov@gmail.com" }]
 license = { text = "MIT" }
 
@@ -37,7 +37,7 @@ ebump = "ebump.main:main"
 [tool.ruff]
 line-length = 88
 indent-width = 4
-target-version = "py313"
+target-version = "py311"
 
 [tool.ruff.format]
 quote-style = "double"
@@ -78,7 +78,7 @@ unfixable = []
 
 
 [tool.mypy]
-python_version = "3.13"
+python_version = "3.11"
 files = ["src", "tests"]
 warn_unused_configs = true
 warn_redundant_casts = true
