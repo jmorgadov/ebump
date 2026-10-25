@@ -2,6 +2,8 @@
 Tests for ebump CLI.
 """
 
+from pathlib import Path
+
 from conftest import make_pyproject, read_version, run_ebump
 
 # ---------------------------------------------------------------------------
@@ -10,12 +12,12 @@ from conftest import make_pyproject, read_version, run_ebump
 
 
 class TestShowVersion:
-    def test_shows_current_version(self, project):
+    def test_shows_current_version(self, project: Path) -> None:
         result = run_ebump([], project)
         assert result.returncode == 0
         assert "1.0.0" in result.stdout
 
-    def test_shows_pre_release_version(self, project):
+    def test_shows_pre_release_version(self, project: Path) -> None:
         make_pyproject("2.3.0-beta1", project)
         result = run_ebump([], project)
         assert result.returncode == 0
@@ -28,42 +30,42 @@ class TestShowVersion:
 
 
 class TestBumpPatch:
-    def test_patch_increments_patch(self, project):
+    def test_patch_increments_patch(self, project: Path) -> None:
         run_ebump(["patch"], project)
         assert read_version(project) == "1.0.1"
 
-    def test_patch_resets_prerelease_tag(self, project):
+    def test_patch_resets_prerelease_tag(self, project: Path) -> None:
         make_pyproject("1.0.0-beta2", project)
         run_ebump(["patch"], project)
         assert read_version(project) == "1.0.1"
 
-    def test_patch_dry_run_does_not_change(self, project):
+    def test_patch_dry_run_does_not_change(self, project: Path) -> None:
         run_ebump(["patch", "--dry-run"], project)
         assert read_version(project) == "1.0.0"
 
 
 class TestBumpMinor:
-    def test_minor_increments_minor_resets_patch(self, project):
+    def test_minor_increments_minor_resets_patch(self, project: Path) -> None:
         make_pyproject("1.2.3", project)
         run_ebump(["minor"], project)
         assert read_version(project) == "1.3.0"
 
-    def test_minor_with_beta_tag(self, project):
+    def test_minor_with_beta_tag(self, project: Path) -> None:
         run_ebump(["minor", "beta"], project)
         assert read_version(project) == "1.1.0-beta0"
 
-    def test_minor_dry_run(self, project):
+    def test_minor_dry_run(self, project: Path) -> None:
         run_ebump(["minor", "--dry-run"], project)
         assert read_version(project) == "1.0.0"
 
 
 class TestBumpMajor:
-    def test_major_increments_major_resets_rest(self, project):
+    def test_major_increments_major_resets_rest(self, project: Path) -> None:
         make_pyproject("1.5.4", project)
         run_ebump(["major"], project)
         assert read_version(project) == "2.0.0"
 
-    def test_major_with_alpha_tag(self, project):
+    def test_major_with_alpha_tag(self, project: Path) -> None:
         run_ebump(["major", "alpha"], project)
         assert read_version(project) == "2.0.0-alpha0"
 
@@ -74,45 +76,45 @@ class TestBumpMajor:
 
 
 class TestBumpTag:
-    def test_tag_increments_existing_tag_number(self, project):
+    def test_tag_increments_existing_tag_number(self, project: Path) -> None:
         make_pyproject("1.0.0-beta1", project)
         run_ebump(["tag"], project)
         assert read_version(project) == "1.0.0-beta2"
 
-    def test_tag_with_no_tag_exits_error(self, project):
+    def test_tag_with_no_tag_exits_error(self, project: Path) -> None:
         assert read_version(project) == "1.0.0"
         result = run_ebump(["tag"], project)
         assert result.returncode != 0
         assert "Cannot bump tag number on a final version" in result.stderr
 
-    def test_tag_beta_when_at_alpha_promotes_to_beta(self, project):
+    def test_tag_beta_when_at_alpha_promotes_to_beta(self, project: Path) -> None:
         make_pyproject("1.0.0-alpha3", project)
         run_ebump(["tag", "beta"], project)
         assert read_version(project) == "1.0.0-beta0"
 
-    def test_tag_beta_when_at_beta_increments(self, project):
+    def test_tag_beta_when_at_beta_increments(self, project: Path) -> None:
         make_pyproject("1.0.0-beta0", project)
         run_ebump(["tag", "beta"], project)
         assert read_version(project) == "1.0.0-beta1"
 
 
 class TestTagShorthand:
-    def test_alpha_when_already_alpha_increments(self, project):
+    def test_alpha_when_already_alpha_increments(self, project: Path) -> None:
         make_pyproject("1.0.0-alpha4", project)
         run_ebump(["alpha"], project)
         assert read_version(project) == "1.0.0-alpha5"
 
-    def test_beta_when_at_alpha_promotes(self, project):
+    def test_beta_when_at_alpha_promotes(self, project: Path) -> None:
         make_pyproject("1.0.0-alpha5", project)
         run_ebump(["beta"], project)
         assert read_version(project) == "1.0.0-beta0"
 
-    def test_final_from_rc_removes_tag(self, project):
+    def test_final_from_rc_removes_tag(self, project: Path) -> None:
         make_pyproject("1.0.0-rc2", project)
         run_ebump(["final"], project)
         assert read_version(project) == "1.0.0"
 
-    def test_final_when_already_final_is_noop(self, project):
+    def test_final_when_already_final_is_noop(self, project: Path) -> None:
         result = run_ebump(["final"], project)
         assert result.returncode == 0
         assert read_version(project) == "1.0.0"
@@ -125,61 +127,61 @@ class TestTagShorthand:
 
 
 class TestErrorCases:
-    def test_bump_to_tag_on_final_is_error(self, project):
+    def test_bump_to_tag_on_final_is_error(self, project: Path) -> None:
         make_pyproject("1.0.0", project)
         result = run_ebump(["beta"], project)
         assert result.returncode != 0
         assert "Cannot bump to tag beta on a final version" in result.stderr
 
-    def test_two_parts_is_an_error(self, project):
+    def test_two_parts_is_an_error(self, project: Path) -> None:
         result = run_ebump(["patch", "minor"], project)
         assert result.returncode != 0
 
-    def test_two_tags_is_an_error(self, project):
+    def test_two_tags_is_an_error(self, project: Path) -> None:
         result = run_ebump(["alpha", "beta"], project)
         assert result.returncode != 0
 
-    def test_three_args_is_an_error(self, project):
+    def test_three_args_is_an_error(self, project: Path) -> None:
         result = run_ebump(["minor", "alpha", "beta"], project)
         assert result.returncode != 0
 
-    def test_missing_config_exits_with_error(self, tmp_path):
+    def test_missing_config_exits_with_error(self, tmp_path: Path) -> None:
         # A directory with no pyproject.toml at all
         result = run_ebump([], tmp_path)
         assert result.returncode != 0
 
-    def test_invalid_bumping_exits_with_error(self, project):
+    def test_invalid_bumping_exits_with_error(self, project: Path) -> None:
         make_pyproject("1.0.0-beta2", project)
         result = run_ebump(["alpha"], project)
         assert result.returncode != 0
 
 
 class TestVersionSet:
-    def test_version_set(self, project):
+    def test_version_set(self, project: Path) -> None:
         make_pyproject("1.0.0", project)
         result = run_ebump(["--set", "1.0.1-alpha1"], project)
         assert result.returncode == 0
         assert read_version(project) == "1.0.1-alpha1"
 
-    def test_version_set_dry_run(self, project):
+    def test_version_set_dry_run(self, project: Path) -> None:
         make_pyproject("1.0.0", project)
         result = run_ebump(["--set", "1.0.1-alpha1", "--dry-run"], project)
         assert result.returncode == 0
         assert read_version(project) == "1.0.0"
 
-    def test_version_set_invalid_version(self, project):
+    def test_version_set_invalid_version(self, project: Path) -> None:
         make_pyproject("1.0.0", project)
         result = run_ebump(["--set", "not_a_version"], project)
         assert result.returncode != 0
         assert "Invalid version string: not_a_version" in result.stderr
 
-    def test_version_set_forcedly_overwrite(self, project):
+    def test_version_set_forcedly_overwrite(self, project: Path) -> None:
         make_pyproject("3.0.0", project)
         result = run_ebump(["--set", "2.0.0", "--force"], project)
         assert result.returncode == 0
         assert read_version(project) == "2.0.0"
 
-    def test_versino_set_invalid_no_force(self, project):
+    def test_versino_set_invalid_no_force(self, project: Path) -> None:
         make_pyproject("3.0.0", project)
         result = run_ebump(["--set", "2.0.0"], project)
         assert result.returncode != 0

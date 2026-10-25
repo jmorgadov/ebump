@@ -1,6 +1,7 @@
 import subprocess
 import sys
 import textwrap
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
@@ -11,9 +12,9 @@ PROJECT_ROOT = Path(__file__).parent.parent
 def make_pyproject(
     version: str,
     tmp_path: Path,
-    patterns: None | list[str] = None,
-    custom_files: None | list[tuple[str, str]] = None,
-    custom_pyproject_content: None | str = None,
+    patterns: list[str] | None = None,
+    custom_files: list[tuple[str, str]] | None = None,
+    custom_pyproject_content: str | None = None,
 ) -> None:
     """Write a minimal pyproject.toml with bumpver configured."""
     content = custom_pyproject_content or textwrap.dedent(
@@ -49,7 +50,7 @@ def read_raw_text(path: Path) -> str:
         return file.read()
 
 
-def run_ebump(args: list[str], cwd: Path) -> subprocess.CompletedProcess:
+def run_ebump(args: list[str], cwd: Path) -> subprocess.CompletedProcess[str]:
     """Run ebump as a subprocess so os.chdir() side effects are isolated."""
     project_root = Path(__file__).parent.parent
     data_file = str((project_root / ".coverage").absolute())
@@ -72,7 +73,7 @@ def run_ebump(args: list[str], cwd: Path) -> subprocess.CompletedProcess:
 
 
 @pytest.fixture(scope="session", autouse=True)
-def combine_coverage():
+def combine_coverage() -> Iterator[None]:
     """
     Combine coverage data files after all tests have run, and clean up the
     individual files.
@@ -93,7 +94,7 @@ def combine_coverage():
 
 
 @pytest.fixture()
-def project(tmp_path_factory: pytest.TempPathFactory):
+def project(tmp_path_factory: pytest.TempPathFactory) -> Path:
     """
     A temporary directory that mimics a real Python project.
     Starts at version 1.0.0 by default.

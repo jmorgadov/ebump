@@ -10,11 +10,11 @@ from ebump.version import VERSION_RE, TagType, Version
 class Config:
     root: Path
     current_version: Version
-    re_patterns: dict[Path, list[re.Pattern]]
+    re_patterns: dict[Path, list[re.Pattern[str]]]
 
 
 def _ensure_pyproject_pattern(
-    pyproject_path: Path, re_patterns: dict[Path, list[re.Pattern]]
+    pyproject_path: Path, re_patterns: dict[Path, list[re.Pattern[str]]]
 ) -> None:
     pyproject_pattern = re.compile(
         r"^version\s*=\s*\"" + VERSION_RE.pattern + r"\"\s*$"
@@ -52,7 +52,7 @@ def parse_config(root: Path) -> Config:
     config_patterns = (
         pyproject_dict.get("tool", {}).get("ebump", {}).get("patterns", {})
     )
-    re_patterns: dict[Path, list[re.Pattern]] = {}
+    re_patterns: dict[Path, list[re.Pattern[str]]] = {}
 
     for str_path, patterns in config_patterns.items():
         path = (root / Path(str_path)).absolute()
@@ -60,7 +60,7 @@ def parse_config(root: Path) -> Config:
             raise FileNotFoundError(
                 f"File {path} specified in pyproject.toml does not exist in project root {root.absolute()!s}"
             )
-        path_re_patterns: list[re.Pattern] = []
+        path_re_patterns: list[re.Pattern[str]] = []
         for pattern in patterns:
             if "{version}" not in pattern:
                 raise ValueError(

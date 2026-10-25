@@ -16,7 +16,7 @@ RewriteData = NamedTuple(
 
 
 def rewrite_lines(
-    old_lines: list[str], new_version: str, patterns: list[re.Pattern]
+    old_lines: list[str], new_version: str, patterns: list[re.Pattern[str]]
 ) -> list[str]:
     used_patterns = set()
     new_lines = old_lines[:]
@@ -63,7 +63,7 @@ def rewrite_lines(
 
 
 def rewrite_file(
-    path: Path, new_version: str, patterns: list[re.Pattern]
+    path: Path, new_version: str, patterns: list[re.Pattern[str]]
 ) -> RewriteData:
     with path.open(newline="") as file:
         content = file.read()

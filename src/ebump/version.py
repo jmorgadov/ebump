@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import enum
 import re
-from typing import NamedTuple, cast
+from typing import NamedTuple
 
 
 class PartType(enum.Enum):
@@ -59,7 +59,7 @@ class Version(NamedTuple):
         tag = TagType(match.group("tag") or "final")
         tag_num = int(match.group("tag_num") or 0)
 
-        return Version(major, minor, patch, cast(TagType, tag), tag_num)
+        return Version(major, minor, patch, tag, tag_num)
 
     def __eq__(self, other: object) -> bool:
         return self._compare(other) == 0

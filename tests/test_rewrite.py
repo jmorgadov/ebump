@@ -1,8 +1,10 @@
+from pathlib import Path
+
 from conftest import make_pyproject, read_raw_text, run_ebump
 
 
 class TestRewritePatterns:
-    def test_pattern_rewrite_same_line_endings(self, project):
+    def test_pattern_rewrite_same_line_endings(self, project: Path) -> None:
         make_pyproject(
             "1.0.0",
             project,
@@ -25,7 +27,7 @@ class TestRewritePatterns:
             == '[project]\rname = "test_project"\rversion = "1.0.1"\r'
         )
 
-    def test_mixed_line_endings_preserved(self, project):
+    def test_mixed_line_endings_preserved(self, project: Path) -> None:
         content = '[project]\r\nname = "test_project"\nversion = "1.0.0"\r\n'
         make_pyproject("1.0.0", project, custom_pyproject_content=content)
 
@@ -35,7 +37,7 @@ class TestRewritePatterns:
             '[project]\r\nname = "test_project"\nversion = "1.0.1"\r\n'
         )
 
-    def test_no_trailing_newline(self, project):
+    def test_no_trailing_newline(self, project: Path) -> None:
         content = '[project]\nname = "test_project"\nversion = "1.0.0"'
         make_pyproject("1.0.0", project, custom_pyproject_content=content)
 
@@ -46,7 +48,7 @@ class TestRewritePatterns:
             '[project]\nname = "test_project"\nversion = "1.0.1"'
         )
 
-    def test_preserve_multiple_trailing_newlines(self, project):
+    def test_preserve_multiple_trailing_newlines(self, project: Path) -> None:
         content = '[project]\nname = "test_project"\nversion = "1.0.0"\n\n'
         make_pyproject("1.0.0", project, custom_pyproject_content=content)
 
@@ -56,7 +58,7 @@ class TestRewritePatterns:
             '[project]\nname = "test_project"\nversion = "1.0.1"\n\n'
         )
 
-    def test_preserve_blank_lines_between(self, project):
+    def test_preserve_blank_lines_between(self, project: Path) -> None:
         content = '[project]\n\nname = "test_project"\n\nversion = "1.0.0"\n'
         make_pyproject("1.0.0", project, custom_pyproject_content=content)
 
@@ -66,7 +68,7 @@ class TestRewritePatterns:
             '[project]\n\nname = "test_project"\n\nversion = "1.0.1"\n'
         )
 
-    def test_crlf_not_doubled(self, project):
+    def test_crlf_not_doubled(self, project: Path) -> None:
         # regression test for Windows double-spacing bug
         content = '[project]\r\nname = "test_project"\r\nversion = "1.0.0"\r\n'
         make_pyproject("1.0.0", project, custom_pyproject_content=content)
@@ -79,7 +81,7 @@ class TestRewritePatterns:
         assert "\r\r\n" not in result
         assert result == '[project]\r\nname = "test_project"\r\nversion = "1.0.1"\r\n'
 
-    def test_multiple_version_occurrences_same_line(self, project):
+    def test_multiple_version_occurrences_same_line(self, project: Path) -> None:
         content = '[project]\nversion = "1.0.0"\n# here 1.0.0 also 1.0.0 here\n\n[tool.ebump.patterns]\n"pyproject.toml" = ["^# here {version} also {version} here$"]\n'
         make_pyproject("1.0.0", project, custom_pyproject_content=content)
 

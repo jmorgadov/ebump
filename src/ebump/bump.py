@@ -12,7 +12,10 @@ def bump(curr_ver: Version, part: PartType, tag: TagType | None = None) -> Versi
         )
 
     assert part == PartType.TAG, "Invalid part type for bumping"
+    return _bump_tag(curr_ver, tag)
 
+
+def _bump_tag(curr_ver: Version, tag: TagType | None) -> Version:
     if curr_ver.tag == TagType.FINAL:
         if tag is not None and tag != TagType.FINAL:
             raise ValueError(f"Cannot bump to tag {tag._value_} on a final version.")
