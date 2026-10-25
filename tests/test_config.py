@@ -1,4 +1,5 @@
 import textwrap
+from pathlib import Path
 
 import pytest
 from conftest import make_pyproject
@@ -8,12 +9,12 @@ from ebump.version import VERSION_RE
 
 
 class TestConfig:
-    def test_config_no_patterns(self, project):
+    def test_config_no_patterns(self, project: Path) -> None:
         make_pyproject("1.0.0", project)
         cfg = parse_config(project)
         assert cfg.current_version == "1.0.0"
 
-    def test_config_with_patterns(self, project):
+    def test_config_with_patterns(self, project: Path) -> None:
         make_pyproject(
             "2.3.0-beta1",
             project,
@@ -28,7 +29,7 @@ class TestConfig:
         assert len(patterns) == 1
         assert patterns[0].pattern == r"^version = " + VERSION_RE.pattern + "$"
 
-    def test_config_no_pyproject_version(self, project):
+    def test_config_no_pyproject_version(self, project: Path) -> None:
         make_pyproject(
             "",
             project,
@@ -40,7 +41,7 @@ class TestConfig:
         with pytest.raises(ValueError, match=r"No version found in pyproject.toml.*"):
             parse_config(project)
 
-    def test_config_invalid_pyproject_version(self, project):
+    def test_config_invalid_pyproject_version(self, project: Path) -> None:
         make_pyproject(
             "not_a_version",
             project,
@@ -55,7 +56,7 @@ class TestConfig:
         ):
             parse_config(project)
 
-    def test_config_pattern_invalid_file(self, project):
+    def test_config_pattern_invalid_file(self, project: Path) -> None:
         make_pyproject(
             "1.0.0",
             project,

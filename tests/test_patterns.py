@@ -1,8 +1,10 @@
+from pathlib import Path
+
 from conftest import make_pyproject, run_ebump
 
 
 class TestPatterns:
-    def test_pattern_simple(self, project):
+    def test_pattern_simple(self, project: Path) -> None:
         make_pyproject(
             "1.0.0",
             project,
@@ -12,7 +14,7 @@ class TestPatterns:
         run_ebump(["patch"], project)
         assert (project / "custom_file.md").read_text() == "version = 1.0.1"
 
-    def test_pattern_multiple_on_same_line(self, project):
+    def test_pattern_multiple_on_same_line(self, project: Path) -> None:
         make_pyproject(
             "1.0.0",
             project,
@@ -22,7 +24,7 @@ class TestPatterns:
         run_ebump(["patch"], project)
         assert (project / "custom_file.md").read_text() == "version = 1.0.1 and 1.0.1"
 
-    def test_multiple_but_only_change_one(self, project):
+    def test_multiple_but_only_change_one(self, project: Path) -> None:
         make_pyproject(
             "1.0.0",
             project,
@@ -34,7 +36,7 @@ class TestPatterns:
             project / "custom_file.md"
         ).read_text() == "version = 1.0.1 version = 1.0.0"
 
-    def test_pattern_not_found(self, project):
+    def test_pattern_not_found(self, project: Path) -> None:
         make_pyproject(
             "1.0.0",
             project,
@@ -45,7 +47,7 @@ class TestPatterns:
         assert result.returncode != 0
         assert "Some patterns were not found" in result.stderr
 
-    def test_pattern_does_not_contain_placeholder(self, project):
+    def test_pattern_does_not_contain_placeholder(self, project: Path) -> None:
         make_pyproject(
             "1.0.0",
             project,
