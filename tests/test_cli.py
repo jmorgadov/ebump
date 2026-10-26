@@ -185,7 +185,4 @@ class TestVersionSet:
         make_pyproject("3.0.0", project)
         result = run_ebump(["--set", "2.0.0"], project)
         assert result.returncode != 0
-        assert (
-            "New version 2.0.0 must be greater than current version 3.0.0"
-            in result.stderr
-        )
+        assert "New version 2.0.0 must be greater than current version 3.0.0" in result.stderr

@@ -43,9 +43,7 @@ class Version(NamedTuple):
     tag_num: int
 
     def __str__(self) -> str:
-        tag_sufix = (
-            "" if self.tag == TagType.FINAL else f"-{self.tag._value_}{self.tag_num}"
-        )
+        tag_sufix = "" if self.tag == TagType.FINAL else f"-{self.tag._value_}{self.tag_num}"
         return f"{self.major}.{self.minor}.{self.patch}{tag_sufix}"
 
     @staticmethod

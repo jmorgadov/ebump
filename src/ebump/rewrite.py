@@ -5,14 +5,11 @@ from typing import NamedTuple
 from ebump.config import Config
 from ebump.version import VERSION_RE
 
-RewriteData = NamedTuple(
-    "RewriteData",
-    [
-        ("path", Path),
-        ("old_lines", list[str]),
-        ("new_lines", list[str]),
-    ],
-)
+
+class RewriteData(NamedTuple):
+    path: Path
+    old_lines: list[str]
+    new_lines: list[str]
 
 
 def rewrite_lines(
@@ -62,9 +59,7 @@ def rewrite_lines(
     return new_lines
 
 
-def rewrite_file(
-    path: Path, new_version: str, patterns: list[re.Pattern[str]]
-) -> RewriteData:
+def rewrite_file(path: Path, new_version: str, patterns: list[re.Pattern[str]]) -> RewriteData:
     with path.open(newline="") as file:
         content = file.read()
     old_lines = content.splitlines(keepends=True)
@@ -74,8 +69,7 @@ def rewrite_file(
 
 def rewrite_files(config: Config, new_version: str) -> list[RewriteData]:
     return [
-        rewrite_file(path, new_version, patterns)
-        for path, patterns in config.re_patterns.items()
+        rewrite_file(path, new_version, patterns) for path, patterns in config.re_patterns.items()
     ]
 
 

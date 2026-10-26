@@ -139,8 +139,7 @@ Bad examples:
 
     if len(bump_args) > 2:
         raise ValueError(
-            "Too many arguments provided. You can only specify one part to bump"
-            " and/or one tag"
+            "Too many arguments provided. You can only specify one part to bump and/or one tag"
         )
 
     part_opts = set(map(str.lower, PartType.__members__))
