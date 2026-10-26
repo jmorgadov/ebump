@@ -1,19 +1,18 @@
 # Makefile for QA checks (lint, format, type-check, tests) and tasks (build, clean, run)
 
-.PHONY: qa lint format typecheck test clean run build version docs 
-.ONESHELL: version
+.PHONY: qa lint format typecheck test clean run build repo worktree  
 
 # Default target
-qa: lint format typecheck
+qa: lint format typecheck test
 	@printf "\033[92m[QA] All checks passed successfully.\033[0m\n"
 
 lint:
 	@printf "\n\033[1;34mRunning Ruff Linter\033[0m\n"
-	uvx ruff check --fix
+	uv run ruff check --fix
 
 format:
 	@printf "\n\033[1;34mRunning Ruff Format\033[0m\n"
-	uvx ruff format
+	uv run ruff format
 
 typecheck:
 	@printf "\n\033[1;34mRunning Mypy\033[0m\n"
@@ -23,15 +22,24 @@ test:
 	@printf "\n\033[1;34mRunning Pytest\033[0m\n"
 	uv run pytest
 
-docs:
-	@printf "\n\033[1;34mBuilding the documentation\033[0m\n"
-	uv sync --group docs
-	uv run mkdocs build -f ./docs/src/mkdocs.yml -d ../../dist/docs
+repo:
+	@printf "\n\033[1;34mCreating the git repository\033[0m\n"
+	@command -v git >/dev/null || { printf "error: git is required; install it from https://git-scm.com/downloads\n" >&2; exit 1; }
+	@if [ -e .git ]; then echo "· local repository already initialised"; \
+	else git init -q -b main && echo "· initialised the local repository"; fi
+	@if git rev-parse --verify -q HEAD >/dev/null; then echo "· initial commit already present"; \
+	else git add --all && git commit -q -m "Initial commit" && echo "· created the initial commit"; fi
+	uv run python scripts/create_remote.py $(REPO_ARGS)
+
+
+worktree:
+	@bash scripts/worktree.sh
+
 	
-build: clean docs
-	uv sync --all-groups
-	uv run python -m build
-	uv export --no-emit-project --no-hashes --no-header --no-annotate --no-dev --format requirements-txt > "dist/requirements.txt"
+build: clean 
+	uv build
+
+
 
 clean:
 	@printf "\n\033[1;34mCleaning build and cache artifacts\033[0m\n"
@@ -40,3 +48,4 @@ clean:
 
 run:
 	env $$(grep -v '^#' .env | xargs) uv run ebump
+
