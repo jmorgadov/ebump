@@ -17,6 +17,8 @@ logger = logging.getLogger(__name__)
 
 
 MAIN_PARTS = {"patch", "minor", "major"}
+# One part to bump and/or one tag
+MAX_BUMP_ARGS = 2
 PART_OPTS = MAIN_PARTS.union({"tag"})
 TAG_OPTS = {"alpha", "beta", "dev", "rc", "post", "final"}
 
@@ -137,7 +139,7 @@ Bad examples:
         sys.stdout.write(f"{current_version}\n")
         sys.exit(0)
 
-    if len(bump_args) > 2:
+    if len(bump_args) > MAX_BUMP_ARGS:
         raise ValueError(
             "Too many arguments provided. You can only specify one part to bump and/or one tag"
         )

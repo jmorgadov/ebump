@@ -9,7 +9,8 @@ def bump(curr_ver: Version, part: PartType, tag: TagType | None = None) -> Versi
     if part == PartType.PATCH:
         return Version(curr_ver.major, curr_ver.minor, curr_ver.patch + 1, tag or TagType.FINAL, 0)
 
-    assert part == PartType.TAG, "Invalid part type for bumping"
+    if part != PartType.TAG:
+        raise ValueError(f"Invalid part type for bumping: {part}")
     return _bump_tag(curr_ver, tag)
 
 

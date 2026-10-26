@@ -29,10 +29,10 @@ def rewrite_lines(
             used_patterns.add(patt_idx)
             new_line = ""
             last_idx = 0
-            for group_idx in range(len(match.groups()) // 2):
+            for version_idx in range(len(match.groups()) // 2):
                 # group indices are 1-based and we want to
                 # skip the tag group for each version group
-                group_idx = group_idx * 2 + 1
+                group_idx = version_idx * 2 + 1
                 start_idx = match.start(group_idx)
                 end_idx = match.end(group_idx)
                 if last_idx < start_idx:

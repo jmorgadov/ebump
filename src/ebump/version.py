@@ -62,6 +62,10 @@ class Version(NamedTuple):
     def __eq__(self, other: object) -> bool:
         return self._compare(other) == 0
 
+    def __hash__(self) -> int:
+        # Equality compares every field, so the tuple hash stays consistent with it
+        return tuple.__hash__(self)
+
     def __lt__(self, other: object) -> bool:
         return self._compare(other) == -1
 
