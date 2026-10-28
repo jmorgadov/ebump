@@ -43,9 +43,7 @@ class Version(NamedTuple):
     tag_num: int
 
     def __str__(self) -> str:
-        tag_sufix = (
-            "" if self.tag == TagType.FINAL else f"-{self.tag._value_}{self.tag_num}"
-        )
+        tag_sufix = "" if self.tag == TagType.FINAL else f"-{self.tag._value_}{self.tag_num}"
         return f"{self.major}.{self.minor}.{self.patch}{tag_sufix}"
 
     @staticmethod
@@ -63,6 +61,10 @@ class Version(NamedTuple):
 
     def __eq__(self, other: object) -> bool:
         return self._compare(other) == 0
+
+    def __hash__(self) -> int:
+        # Equality compares every field, so the tuple hash stays consistent with it
+        return tuple.__hash__(self)
 
     def __lt__(self, other: object) -> bool:
         return self._compare(other) == -1
