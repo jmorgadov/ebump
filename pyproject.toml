@@ -1,6 +1,6 @@
 [project]
 name = "ebump"
-version = "0.2.3-beta0"
+version = "0.2.3"
 description = "Easy version bumping"
 readme = "README.md"
 requires-python = ">=3.11"
