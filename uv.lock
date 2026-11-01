@@ -225,7 +225,7 @@ wheels = [
 
 [[package]]
 name = "ebump"
-version = "0.2.3"
+version = "0.2.4b0"
 source = { editable = "." }
 
 [package.dev-dependencies]
