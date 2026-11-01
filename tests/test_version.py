@@ -35,7 +35,7 @@ class TestVersion:
         assert v0 == Version.parse("0.0.1-alpha0")
         assert v0 <= Version.parse("0.0.1-alpha0")
         assert v0 <= v5
-        assert v0 >= v0
+        assert v0 >= Version.parse("0.0.1-alpha0")
         assert v2 > v0
         assert Version.parse("0.0.2") > v3
 

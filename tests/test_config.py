@@ -2,8 +2,8 @@ import textwrap
 from pathlib import Path
 
 import pytest
-from conftest import make_pyproject
 
+from conftest import make_pyproject
 from ebump.config import parse_config
 from ebump.version import VERSION_RE
 
@@ -51,16 +51,12 @@ class TestConfig:
             version = "not_a_version"
             """),
         )
-        with pytest.raises(
-            ValueError, match=r"Invalid version string in pyproject.toml.*"
-        ):
+        with pytest.raises(ValueError, match=r"Invalid version string in pyproject.toml.*"):
             parse_config(project)
 
     def test_config_pattern_invalid_file(self, project: Path) -> None:
         make_pyproject(
-            "1.0.0",
-            project,
-            patterns=[r'"nonexistent_file.md" = ["^version = {version}$"]'],
+            "1.0.0", project, patterns=[r'"nonexistent_file.md" = ["^version = {version}$"]']
         )
         with pytest.raises(FileNotFoundError, match=r"File .* does not exist.*"):
             parse_config(project)

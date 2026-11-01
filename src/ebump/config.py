@@ -16,9 +16,7 @@ class Config:
 def _ensure_pyproject_pattern(
     pyproject_path: Path, re_patterns: dict[Path, list[re.Pattern[str]]]
 ) -> None:
-    pyproject_pattern = re.compile(
-        r"^version\s*=\s*\"" + VERSION_RE.pattern + r"\"\s*$"
-    )
+    pyproject_pattern = re.compile(r"^version\s*=\s*\"" + VERSION_RE.pattern + r"\"\s*$")
     pyproject_patterns = re_patterns.get(pyproject_path, [])
     pyproject_patterns.append(pyproject_pattern)
     re_patterns[pyproject_path] = pyproject_patterns
@@ -28,9 +26,7 @@ def parse_config(root: Path) -> Config:
     pyproject_path = root / "pyproject.toml"
     pyproject_content = pyproject_path.read_text() if pyproject_path.exists() else ""
     if not pyproject_content:
-        raise FileNotFoundError(
-            f"No pyproject.toml found in project root {root.absolute()!s}"
-        )
+        raise FileNotFoundError(f"No pyproject.toml found in project root {root.absolute()!s}")
 
     pyproject_dict = tomllib.loads(pyproject_content)
 
@@ -49,9 +45,7 @@ def parse_config(root: Path) -> Config:
             f"where TAG can be {set(TagType.__members__)}.\n"
         ) from e
 
-    config_patterns = (
-        pyproject_dict.get("tool", {}).get("ebump", {}).get("patterns", {})
-    )
+    config_patterns = pyproject_dict.get("tool", {}).get("ebump", {}).get("patterns", {})
     re_patterns: dict[Path, list[re.Pattern[str]]] = {}
 
     for str_path, patterns in config_patterns.items():

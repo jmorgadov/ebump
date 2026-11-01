@@ -32,9 +32,7 @@ class TestPatterns:
             custom_files=[("custom_file.md", "version = 1.0.0 version = 1.0.0")],
         )
         run_ebump(["patch"], project)
-        assert (
-            project / "custom_file.md"
-        ).read_text() == "version = 1.0.1 version = 1.0.0"
+        assert (project / "custom_file.md").read_text() == "version = 1.0.1 version = 1.0.0"
 
     def test_pattern_not_found(self, project: Path) -> None:
         make_pyproject(

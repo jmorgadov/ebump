@@ -67,6 +67,7 @@ def run_ebump(args: list[str], cwd: Path) -> subprocess.CompletedProcess[str]:
             *args,
         ],
         capture_output=True,
+        check=False,
         text=True,
         cwd=str(cwd),
     )

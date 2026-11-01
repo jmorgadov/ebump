@@ -5,14 +5,11 @@ from typing import NamedTuple
 from ebump.config import Config
 from ebump.version import VERSION_RE
 
-RewriteData = NamedTuple(
-    "RewriteData",
-    [
-        ("path", Path),
-        ("old_lines", list[str]),
-        ("new_lines", list[str]),
-    ],
-)
+
+class RewriteData(NamedTuple):
+    path: Path
+    old_lines: list[str]
+    new_lines: list[str]
 
 
 def rewrite_lines(
@@ -32,10 +29,10 @@ def rewrite_lines(
             used_patterns.add(patt_idx)
             new_line = ""
             last_idx = 0
-            for group_idx in range(len(match.groups()) // 2):
+            for version_idx in range(len(match.groups()) // 2):
                 # group indices are 1-based and we want to
                 # skip the tag group for each version group
-                group_idx = group_idx * 2 + 1
+                group_idx = version_idx * 2 + 1
                 start_idx = match.start(group_idx)
                 end_idx = match.end(group_idx)
                 if last_idx < start_idx:
@@ -62,9 +59,7 @@ def rewrite_lines(
     return new_lines
 
 
-def rewrite_file(
-    path: Path, new_version: str, patterns: list[re.Pattern[str]]
-) -> RewriteData:
+def rewrite_file(path: Path, new_version: str, patterns: list[re.Pattern[str]]) -> RewriteData:
     with path.open(newline="") as file:
         content = file.read()
     old_lines = content.splitlines(keepends=True)
@@ -74,8 +69,7 @@ def rewrite_file(
 
 def rewrite_files(config: Config, new_version: str) -> list[RewriteData]:
     return [
-        rewrite_file(path, new_version, patterns)
-        for path, patterns in config.re_patterns.items()
+        rewrite_file(path, new_version, patterns) for path, patterns in config.re_patterns.items()
     ]
 
 

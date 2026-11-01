@@ -1,11 +1,35 @@
+<div align="center">
+
+<img src="assets/logo.svg" alt="" width="96">
+
 # ebump
 
-[![PyPI](https://img.shields.io/pypi/v/ebump.svg)](https://pypi.org/project/ebump/)
-![Tests](https://github.com/jmorgadov/ebump/actions/workflows/test.yml/badge.svg)
+**Easy version bumping**
+
+[![QA](https://github.com/jmorgadov/ebump/actions/workflows/qa.yml/badge.svg)](https://github.com/jmorgadov/ebump/actions/workflows/qa.yml)
+[![Release](https://img.shields.io/github/v/release/jmorgadov/ebump?label=release)](https://github.com/jmorgadov/ebump/releases/latest)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![PyPI](https://img.shields.io/pypi/v/ebump)](https://pypi.org/project/ebump/)
+<br>
+[![uv](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v0.json)](https://github.com/astral-sh/uv)
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
+[![Checked with mypy](https://www.mypy-lang.org/static/mypy_badge.svg)](https://mypy-lang.org/)
+
+<!-- Badges to move into the rows above once they apply:
+[![Docker image](https://img.shields.io/badge/docker-ghcr.io-2496ED?logo=docker&logoColor=white)](https://github.com/jmorgadov/ebump/pkgs/container/ebump)
+[![Docs](https://readthedocs.org/projects/ebump/badge/?version=latest)](https://ebump.readthedocs.io)
+-->
+
+[Quick start](#quick-start) · [Usage](#usage) · [Configuration](#configuration) · [Development](#development)
+
+</div>
+
+---
 
 Easy version bumping CLI tool for python projects.
 
-## Key features
+## Features
 
 - Simple and intuitive CLI for version bumping.
 - Automatic detection of version field in `pyproject.toml`.
@@ -18,7 +42,21 @@ Easy version bumping CLI tool for python projects.
 > (release candidate), and `final`. The `final` tag is implicit when no tag is
 > present.
 
-## Quick showcase
+## Quick start
+
+You can use `ebump` directly via `uvx` (recommended):
+
+```bash
+uvx ebump [PARAMS ...]
+```
+
+Or install it via `pip`:
+
+```bash
+pip install ebump
+```
+
+## Usage
 
 ```bash
 > ebump             # 1.0.0                         Shows current version (same as `uv version --short`)
@@ -78,20 +116,6 @@ versioning files and patterns for different parts of your project.
 "path/to/__init__.py" = ['^__version__ = "{version}"$']
 ```
 
-## Installation / Usage
-
-You can use `ebump` directly via `uvx` (recommended):
-
-```bash
-uvx ebump [PARAMS ...]
-```
-
-Or install it via `pip`:
-
-```bash
-pip install ebump
-```
-
 ## Why `ebump`?
 
 Design differences with `bumpver` CLI:
@@ -116,15 +140,22 @@ Design differences with `bumpver` CLI:
   library directly for more complex use cases if necessary.
 - It does not aim to cover all use cases. It focuses on simplicity and ease of use.
 
-## 🤝 Contributing
+## Development
 
-Contributions are welcome!
-Please ensure all QA checks and tests pass before opening a pull request.
+Setup, QA, docs and releases: [DEVELOPMENT.md](DEVELOPMENT.md).
+
+## Contributing
+
+Issues and pull requests are welcome; `make qa` must pass.
 
 ## Acknowledgements
 
 This project is heavily inspired by [bumpver](https://github.com/mbarkhau/bumpver).
 
+## License
+
+MIT: see [LICENSE](LICENSE).
+
 ---
 
-<sub>🚀 Project starter provided by [Cookie Pyrate](https://github.com/gvieralopez/cookie-pyrate)</sub>
+<sub>🚀 Project starter provided by [Cookie Pyrate v1.1.0](https://github.com/gvieralopez/cookie-pyrate/tree/v1.1.0)</sub>
